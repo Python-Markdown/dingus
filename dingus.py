@@ -1,0 +1,690 @@
+from bottle import route, run, request, template
+import markdown
+from markdown.extensions import extra
+import os
+#import bleach
+
+
+# Get a list of markdown extensions
+extensions = [x.split('.')[0] for x in os.listdir(os.path.dirname(markdown.extensions.__file__)) if x.endswith('.py') and not x.startswith(('__', 'extra')) and x.split('.')[0] not in extra.extensions]
+extensions.sort()
+extra.extensions.sort()
+
+
+@route('/dingus', method=('GET', 'POST'))
+def dingus():
+    context = {'extensions': extensions, 'extra': extra.extensions}
+    # Get data from GET or POST
+    context['src'] = request.params.get('src', '')
+    context['ext'] = request.params.getall('ext')
+    context['safe_mode'] = request.params.get('safe_mode', '')
+    context['output_format'] = request.params.get('output_format', '')
+    # Build rest of context
+    context['version'] = markdown.version
+    # Build command
+    cmd = 'markdown.markdown(src'
+    for key in ['ext', 'safe_mode', 'output_format']:
+        if context[key]:
+            if isinstance(context[key], basestring):
+                cmd += ", %s='%s'" % (key, context[key])
+            else:
+                cmd += ', %s=%s' % (key, context[key])
+    context['cmd'] = cmd + ')'
+    # Convert
+    kwargs = {'extensions': context['ext']}
+    if context['safe_mode']: kwargs['safe_mode'] = context['safe_mode']
+    if context['output_format']: kwargs['output_format'] = context['output_format']
+    context['result'] = markdown.markdown(context['src'], **kwargs)
+    #context['clean_result'] = bleach.clean(context['result'])
+    return template(tmpl, **context)
+
+
+tmpl = """<!doctype html>
+<html>
+  <head>
+    <title>Python-Markdown: Dingus</title>
+    <style type="text/css">
+    /*
+    	Basic layout courtesy of InkNoise's very nifty Layout-o-matic:
+		http://www.inknoise.com/experimental/layoutomatic.php
+	*/
+
+	#sidebar h1 {
+		font-size: 1.5em;
+		font-weight: bold;
+	}
+	#sidebar h2 {
+		font-size: 1.2em;
+		font-weight: bold;
+		margin-bottom: -.5em;
+	}
+	#sidebar h3 {
+		font-size: 1em;
+		font-weight: bold;
+		text-transform: none;
+		margin-bottom: .25em;
+		margin-top: 1.5em;
+	}
+	#sidebar code {
+		font-family: Monaco, ProFont, "Andale Mono", "Lucida Console", Courier, monospace;
+		font-size: 10px;
+	}
+	#sidebar pre {
+		line-height: 12px;
+		margin-top: 0;
+		background-color: #f5f5f5;
+		border: 1px solid #ccc;
+		padding: 4px;
+	}
+	#sidebar p {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	body {
+		background-color: #eee;
+		font-family: "Lucida Grande", Verdana, sans-serif;
+		font-size: 11px;
+		line-height: 1.6em;
+	}
+	.renderbox {
+		background: white;
+		font-family: Georgia, serif;
+		font-size: 13px;
+		border: 1px #888 solid;
+		padding: 0 5px;
+		margin: 0;
+		width: 97%;
+		overflow: auto;
+	}
+	.label {
+		margin-bottom: 4px;
+	}
+
+	#container {
+		border: 0px solid gray;
+		margin: 10px;
+		margin-left: auto;
+		margin-right: auto;
+		padding: 0px;
+		min-width: 750px;
+
+		/* For Win/IE: */
+		width:expression("800px" );
+		margin-left:expression("0");
+	}
+
+	#banner {
+		padding: 0;
+		margin-bottom: 5px;
+		background-color: transparent;
+	}
+
+	#app {
+		padding: 0 10px 0 10px;
+		margin-right: 270px;
+		background-color: transparent;
+		border-right: 0px solid #bbb;
+	}
+
+	#sidebar {
+		float: right;
+		width: 250px;
+		margin: 0;
+		margin-right: 10px;
+		padding: 0;
+		background-color: transparent;
+	}
+
+	.footer {
+		margin-top: 100px;
+	}
+
+	#buttonrow {
+		margin-top: 10px;
+		margin-bottom: 60px;
+	}
+	#convert {
+		width: 7em;
+		margin-left:20px;
+	}
+
+	textarea[name="src"] {
+	/* WinIE is retarded. Thanks to Sam Ruby for the workaround:
+		http://www.intertwingly.net/blog/1432.html */
+		width: 98%;
+	}
+
+	</style>
+    <style type="text/css">
+    /*
+
+    XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
+
+    */
+
+    pre code {
+      display: block; padding: 0.5em;
+      background: #fff; color: black;
+    }
+
+    pre .comment,
+    pre .template_comment,
+    pre .javadoc,
+    pre .comment * {
+      color: rgb(0,106,0);
+    }
+
+    pre .keyword,
+    pre .literal,
+    pre .nginx .title {
+      color: rgb(170,13,145);
+    }
+    pre .method,
+    pre .list .title,
+    pre .tag .title,
+    pre .setting .value,
+    pre .winutils,
+    pre .tex .command,
+    pre .http .title,
+    pre .request,
+    pre .status {
+      color: #008;
+    }
+
+    pre .envvar,
+    pre .tex .special {
+      color: #660;
+    }
+
+    pre .string {
+      color: rgb(196,26,22);
+    }
+    pre .tag .value,
+    pre .cdata,
+    pre .filter .argument,
+    pre .attr_selector,
+    pre .apache .cbracket,
+    pre .date,
+    pre .regexp {
+      color: #080;
+    }
+
+    pre .sub .identifier,
+    pre .pi,
+    pre .tag,
+    pre .tag .keyword,
+    pre .decorator,
+    pre .ini .title,
+    pre .shebang,
+    pre .input_number,
+    pre .hexcolor,
+    pre .rules .value,
+    pre .css .value .number,
+    pre .symbol,
+    pre .symbol .string,
+    pre .number,
+    pre .css .function,
+    pre .clojure .title,
+    pre .clojure .built_in {
+      color: rgb(28,0,207);
+    }
+
+    pre .class .title,
+    pre .haskell .type,
+    pre .smalltalk .class,
+    pre .javadoctag,
+    pre .yardoctag,
+    pre .phpdoc,
+    pre .typename,
+    pre .tag .attribute,
+    pre .doctype,
+    pre .class .id,
+    pre .built_in,
+    pre .setting,
+    pre .params,
+    pre .clojure .attribute {
+      color: rgb(92,38,153);
+    }
+
+    pre .variable {
+     color: rgb(63,110,116);
+    }
+    pre .css .tag,
+    pre .rules .property,
+    pre .pseudo,
+    pre .subst {
+      color: #000;
+    }
+
+    pre .css .class, pre .css .id {
+      color: #9B703F;
+    }
+
+    pre .value .important {
+      color: #ff7700;
+      font-weight: bold;
+    }
+
+    pre .rules .keyword {
+      color: #C5AF75;
+    }
+
+    pre .annotation,
+    pre .apache .sqbracket,
+    pre .nginx .built_in {
+      color: #9B859D;
+    }
+
+    pre .preprocessor,
+    pre .preprocessor * {
+      color: rgb(100,56,32);
+    }
+
+    pre .tex .formula {
+      background-color: #EEE;
+      font-style: italic;
+    }
+
+    pre .diff .header,
+    pre .chunk {
+      color: #808080;
+      font-weight: bold;
+    }
+
+    pre .diff .change {
+      background-color: #BCCFF9;
+    }
+
+    pre .addition {
+      background-color: #BAEEBA;
+    }
+
+    pre .deletion {
+      background-color: #FFC8BD;
+    }
+
+    pre .comment .yardoctag {
+      font-weight: bold;
+    }
+
+    pre .method .id {
+      color: #000;
+    }
+
+    </style>
+    <style type="text/css">
+    /*
+    Pygments styles
+    */
+
+    .codehilite .hll { background-color: #ffffcc }
+    .codehilite  { background: #f0f0f0; }
+    .codehilite .c { color: #60a0b0; font-style: italic } /* Comment */
+    .codehilite .err { border: 1px solid #FF0000 } /* Error */
+    .codehilite .k { color: #007020; font-weight: bold } /* Keyword */
+    .codehilite .o { color: #666666 } /* Operator */
+    .codehilite .cm { color: #60a0b0; font-style: italic } /* Comment.Multiline */
+    .codehilite .cp { color: #007020 } /* Comment.Preproc */
+    .codehilite .c1 { color: #60a0b0; font-style: italic } /* Comment.Single */
+    .codehilite .cs { color: #60a0b0; background-color: #fff0f0 } /* Comment.Special */
+    .codehilite .gd { color: #A00000 } /* Generic.Deleted */
+    .codehilite .ge { font-style: italic } /* Generic.Emph */
+    .codehilite .gr { color: #FF0000 } /* Generic.Error */
+    .codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+    .codehilite .gi { color: #00A000 } /* Generic.Inserted */
+    .codehilite .go { color: #808080 } /* Generic.Output */
+    .codehilite .gp { color: #c65d09; font-weight: bold } /* Generic.Prompt */
+    .codehilite .gs { font-weight: bold } /* Generic.Strong */
+    .codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+    .codehilite .gt { color: #0040D0 } /* Generic.Traceback */
+    .codehilite .kc { color: #007020; font-weight: bold } /* Keyword.Constant */
+    .codehilite .kd { color: #007020; font-weight: bold } /* Keyword.Declaration */
+    .codehilite .kn { color: #007020; font-weight: bold } /* Keyword.Namespace */
+    .codehilite .kp { color: #007020 } /* Keyword.Pseudo */
+    .codehilite .kr { color: #007020; font-weight: bold } /* Keyword.Reserved */
+    .codehilite .kt { color: #902000 } /* Keyword.Type */
+    .codehilite .m { color: #40a070 } /* Literal.Number */
+    .codehilite .s { color: #4070a0 } /* Literal.String */
+    .codehilite .na { color: #4070a0 } /* Name.Attribute */
+    .codehilite .nb { color: #007020 } /* Name.Builtin */
+    .codehilite .nc { color: #0e84b5; font-weight: bold } /* Name.Class */
+    .codehilite .no { color: #60add5 } /* Name.Constant */
+    .codehilite .nd { color: #555555; font-weight: bold } /* Name.Decorator */
+    .codehilite .ni { color: #d55537; font-weight: bold } /* Name.Entity */
+    .codehilite .ne { color: #007020 } /* Name.Exception */
+    .codehilite .nf { color: #06287e } /* Name.Function */
+    .codehilite .nl { color: #002070; font-weight: bold } /* Name.Label */
+    .codehilite .nn { color: #0e84b5; font-weight: bold } /* Name.Namespace */
+    .codehilite .nt { color: #062873; font-weight: bold } /* Name.Tag */
+    .codehilite .nv { color: #bb60d5 } /* Name.Variable */
+    .codehilite .ow { color: #007020; font-weight: bold } /* Operator.Word */
+    .codehilite .w { color: #bbbbbb } /* Text.Whitespace */
+    .codehilite .mf { color: #40a070 } /* Literal.Number.Float */
+    .codehilite .mh { color: #40a070 } /* Literal.Number.Hex */
+    .codehilite .mi { color: #40a070 } /* Literal.Number.Integer */
+    .codehilite .mo { color: #40a070 } /* Literal.Number.Oct */
+    .codehilite .sb { color: #4070a0 } /* Literal.String.Backtick */
+    .codehilite .sc { color: #4070a0 } /* Literal.String.Char */
+    .codehilite .sd { color: #4070a0; font-style: italic } /* Literal.String.Doc */
+    .codehilite .s2 { color: #4070a0 } /* Literal.String.Double */
+    .codehilite .se { color: #4070a0; font-weight: bold } /* Literal.String.Escape */
+    .codehilite .sh { color: #4070a0 } /* Literal.String.Heredoc */
+    .codehilite .si { color: #70a0d0; font-style: italic } /* Literal.String.Interpol */
+    .codehilite .sx { color: #c65d09 } /* Literal.String.Other */
+    .codehilite .sr { color: #235388 } /* Literal.String.Regex */
+    .codehilite .s1 { color: #4070a0 } /* Literal.String.Single */
+    .codehilite .ss { color: #517918 } /* Literal.String.Symbol */
+    .codehilite .bp { color: #007020 } /* Name.Builtin.Pseudo */
+    .codehilite .vc { color: #bb60d5 } /* Name.Variable.Class */
+    .codehilite .vg { color: #bb60d5 } /* Name.Variable.Global */
+    .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
+    .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
+    </style>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script src="http://achinghead.com/media/highlight.pack.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        // JS is active, so setup for it.
+        $("#extensions").hide();
+        var showExt = true;
+        $("#toggle_ext").show();
+        if ($("#extra input").is(":checked")) {
+          $("#extra-exts").find(':input:not(:disabled)').prop('disabled',true);
+        };
+
+        // Highlight "HTML Source" and "Python Code" - but not "HTML Preview" or cheatsheet blocks.
+        // If codehilite is used, that highlight codeblocks in the preview seperately.
+        $("pre.renderbox code").each(function(i, e) {hljs.highlightBlock(e)});
+
+        // Bind toggle click
+        $("#toggle_ext").click(function(event){
+          if (showExt == true) {
+            $("#extensions").slideDown("fast");
+            $(event.target).text("Hide Extensions ^");
+            showExt = false;
+          } else if (showExt == false) {
+            $("#extensions").slideUp("fast");
+            $(event.target).text("Show Extensions v");
+            showExt = true;
+          };
+          event.preventDefault();
+        });
+
+        // Bind Extra input change
+        $("#extra input").change(function(event){
+          if (event.target.checked == true) {
+            $("#extra-exts").find(':input:not(:disabled)').prop('disabled',true);
+          } else if (event.target.checked == false) {
+            $("#extra-exts").find(':input:disabled').prop('disabled',false);
+          };
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+
+<div id="container">
+
+<div id="sidebar">
+<h1>Python-Markdown: Dingus</h1>
+
+<h2>Syntax Cheatsheet:</h2>
+
+<h3>Phrase Emphasis</h3>
+
+<pre><code>*italic*   **bold**
+_italic_   __bold__
+</code></pre>
+
+<h3>Links</h3>
+
+<p>Inline:</p>
+
+<pre><code>An [example](http://url.com/ "Title")
+</code></pre>
+
+<p>Reference-style labels (titles are optional):</p>
+
+<pre><code>An [example][id]. Then, anywhere
+else in the doc, define the link:
+
+  [id]: http://example.com/  "Title"
+</code></pre>
+
+<h3>Images</h3>
+
+<p>Inline (titles are optional):</p>
+
+<pre><code>![alt text](/path/img.jpg "Title")
+</code></pre>
+
+<p>Reference-style:</p>
+
+<pre><code>![alt text][id]
+
+[id]: /url/to/img.jpg "Title"
+</code></pre>
+
+<h3>Headers</h3>
+
+<p>Setext-style:</p>
+
+<pre><code>Header 1
+========
+
+Header 2
+--------
+</code></pre>
+
+<p>atx-style (closing #'s are optional):</p>
+
+<pre><code># Header 1 #
+
+## Header 2 ##
+
+###### Header 6
+</code></pre>
+
+<h3>Lists</h3>
+
+<p>Ordered, without paragraphs:</p>
+
+<pre><code>1.  Foo
+2.  Bar
+
+</code></pre>
+
+<p>Unordered, with paragraphs:</p>
+
+<pre><code>*   A list item.
+
+    With multiple paragraphs.
+
+*   Bar
+</code></pre>
+
+<p>You can nest them:</p>
+
+<pre><code>*   Abacus
+    * answer
+*   Bubbles
+    1.  bunk
+    2.  bupkis
+        * BELITTLER
+    3. burper
+*   Cunning
+</code></pre>
+
+<h3>Blockquotes</h3>
+
+<pre><code>&gt; Email-style angle brackets
+&gt; are used for blockquotes.
+
+&gt; &gt; And, they can be nested.
+
+&gt; #### Headers in blockquotes
+&gt;
+&gt; * You can quote a list.
+&gt; * Etc.
+</code></pre>
+
+<h3>Code Spans</h3>
+
+<pre><code>`&lt;code&gt;` spans are delimited
+by backticks.
+
+You can include literal backticks
+like `` `this` ``.
+</code></pre>
+
+<h3>Preformatted Code Blocks</h3>
+
+<p>Indent every line of a code block by at least 4 spaces or 1 tab.</p>
+
+<pre><code>This is a normal paragraph.
+
+    This is a preformatted
+    code block.
+</code></pre>
+
+<h3>Horizontal Rules</h3>
+
+<p>Three or more dashes or asterisks:</p>
+
+<pre><code>---
+
+* * *
+
+- - - -
+</code></pre>
+
+<h3>Manual Line Breaks</h3>
+
+<p>End a line with two or more spaces:</p>
+
+<pre><code>Roses are red,
+Violets are blue.
+</code></pre>
+</div> <!-- sidebar -->
+
+<div id="app">
+
+    <form action="/dingus" method="post">
+      <div id="src">
+        <p class="label">Markdown Source:</p>
+        <textarea name="src"  rows="25" cols="80">{{ src }}</textarea>
+      </div> <!-- src -->
+
+      <div id="buttonrow">
+
+      <fieldset id="extensions">
+        <legend>Extensions</legend>
+%for x in extensions:
+        <label id="{{ x }}"><input type="checkbox" name="ext" value="{{ x }}"\\\\
+%if x in ext:
+ checked\\\\
+%end
+ /><code>{{ x }}</code></label>
+%end
+        <fieldset>
+        <legend><label id="extra"><input type="checkbox" name="ext" value="extra"\\\\
+%if "extra" in ext:
+ checked\\\\
+%end
+ /><code>extra</code></label></legend>
+
+      <div id="extra-exts">
+%for x in extra:
+        <label id="{{ x }}"><input type="checkbox" name="ext" value="{{ x }}"\\\\
+%if x in ext:
+ checked\\\\
+%end
+ /><code>{{ x }}</code></label>
+%end
+      </div> <!-- extra-exts -->
+      </fieldset>
+      </fieldset> <!-- extensions -->
+
+      <a href="#" id="toggle_ext" style="display:none">Show Extensions v</a>
+      <label id="safe_mode">Safe_Mode:
+        <select name="safe_mode">
+          <option value="">off (default)</option>
+          <option value="escape"\\\\
+%if safe_mode == "escape":
+ selected="selected"\\\\
+%end
+>escape</option>
+          <option value="replace"\\\\
+%if safe_mode == "replace":
+ selected="selected"\\\\
+%end
+>replace</option>
+          <option value="remove"\\\\
+%if safe_mode == "remove":
+ selected="selected"\\\\
+%end
+>remove</option>
+        </select>
+      </label>
+
+      <label id="output_format">Output_Format:
+        <select name="output_format" value="{{ output_format }}">
+          <option value="">xhtml (default)</option>
+          <option value="html4"\\\\
+%if output_format == "html4":
+ selected="selected"\\\\
+%end
+>html 4</option>
+          <option value="html5"\\\\
+%if output_format == "html5":
+ selected="selected"\\\\
+%end
+>html 5</option>
+        </select>
+      </label>
+
+      <input type="submit" id="convert" value="Convert" />
+      </div> <!--buttonrow-->
+
+    </form>
+%if result:
+    <p class="label">HTML Source:</p>
+    <pre id="rawoutput" class="renderbox"><code class="html">{{ result }}</code></pre>
+
+    <p class="label">HTML Preview:</p>
+    <div id="output" class="renderbox">
+      {{! result }}
+    </div>
+
+    <p class="label">Python Code:</p>
+    <pre id="python" class="renderbox"><code class="python">&gt;&gt;&gt;&nbsp;import markdown
+&gt;&gt;&gt;&nbsp;src = '''...'''
+&gt;&gt;&gt;&nbsp;html = {{ cmd }}</code></pre>
+%end
+
+<p class='footer'>
+  <a href="http://packages.python.org/Markdown/">Python-Markdown</a> version {{ version }}<br />
+  Copyright &copy; 2007-2012 Python-Markdown Project (v. 1.7 and later)<br />
+  Copyright &copy; 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)<br />
+  Copyright &copy; 2004 Manfred Stienstra (the original version)<br />
+  <br />
+  <a href="http://daringfireball.net/projects/markdown/">Markdown</a> and
+  <a href="http://daringfireball.net/projects/markdown/dingus">Dingus</a> Copyright &copy; 2004
+  <a href="http://daringfireball.net/colophon/">John Gruber</a><br />
+  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012
+  <a href="http://achinghead.com">Waylan Limberg</a>
+
+</p>
+
+</div> <!-- app -->
+</div> <!-- container -->
+
+  </body>
+</html>
+"""
+
+
+if __name__ == '__main__':
+    run(host='localhost', port=8080, reloader=True)
