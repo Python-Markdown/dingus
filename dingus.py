@@ -10,6 +10,15 @@ extensions = [x.split('.')[0] for x in os.listdir(os.path.dirname(markdown.exten
 extensions.sort()
 extra.extensions.sort()
 
+@route('/babelmark')
+def babelmark():
+    """ Provide a hook for http://johnmacfarlane.net/babelmark2/ to use. """
+    src = request.query.get('text', '')
+    return {
+        'name'   : 'Python-Markdown',
+        'version': markdown.version,
+        'html'   : markdown.markdown(src)
+    }
 
 @route('/dingus', method=('GET', 'POST'))
 def dingus():
