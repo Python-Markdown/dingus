@@ -10,10 +10,16 @@ extensions = [x.split('.')[0] for x in os.listdir(os.path.dirname(markdown.exten
 extensions.sort()
 extra.extensions.sort()
 
+def get_encoding(content_type, default='utf-8'):
+    """ Get encoding from content_type. Borrowed from bottle.Response.charset. """
+    if 'charset=' in content_type:
+        return content_type.split('charset=')[-1].split(';')[0].strip()
+    return default
+
 @route('/babelmark')
 def babelmark():
     """ Provide a hook for http://johnmacfarlane.net/babelmark2/ to use. """
-    src = request.query.get('text', '')
+    src = unicode(request.query.get('text', ''), encoding=get_encoding(request.content_type), errors='replace')
     return {
         'name'   : 'Python-Markdown',
         'version': markdown.version,
@@ -24,7 +30,7 @@ def babelmark():
 def dingus():
     context = {'extensions': extensions, 'extra': extra.extensions}
     # Get data from GET or POST
-    context['src'] = request.params.get('src', '')
+    context['src'] = unicode(request.params.get('src', ''), encoding=get_encoding(request.content_type), errors='replace')
     context['ext'] = request.params.getall('ext')
     context['safe_mode'] = request.params.get('safe_mode', '')
     context['output_format'] = request.params.get('output_format', '')
