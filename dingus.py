@@ -230,7 +230,7 @@ tmpl = """<!doctype html>
     .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
     .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
     </style>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function(){
