@@ -1,7 +1,7 @@
 # Python-Markdown Dingus
 
 A simple site for testing Python-Markdown as well as the backend called by [Babelmark].
-Visit <http://waylan.pythonanywhere.com/dingus> for a live demo.
+Visit <https://waylan.pythonanywhere.com/dingus> for a live demo.
 
 [Babelmark]: http://johnmacfarlane.net/babelmark2/
 
