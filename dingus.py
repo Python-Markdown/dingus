@@ -2,24 +2,17 @@ from bottle import route, run, request, template
 import markdown
 from markdown.extensions import extra
 import os
-#import bleach
 
 
 # Get a list of markdown extensions
-extensions = [x.split('.')[0] for x in os.listdir(os.path.dirname(markdown.extensions.__file__)) if x.endswith('.py') and not x.startswith(('__', 'extra')) and x.split('.')[0] not in extra.extensions]
+extensions = [ext.name for ext in markdown.util.INSTALLED_EXTENSIONS if ext.name not in extra.extensions + ['extra']]
 extensions.sort()
 extra.extensions.sort()
-
-def get_encoding(content_type, default='utf-8'):
-    """ Get encoding from content_type. Borrowed from bottle.Response.charset. """
-    if 'charset=' in content_type:
-        return content_type.split('charset=')[-1].split(';')[0].strip()
-    return default
 
 @route('/babelmark')
 def babelmark():
     """ Provide a hook for http://johnmacfarlane.net/babelmark2/ to use. """
-    src = unicode(request.query.get('text', ''), encoding=get_encoding(request.content_type), errors='replace')
+    src = request.query.get('text', '')
     return {
         'name'   : 'Python-Markdown',
         'version': markdown.version,
@@ -30,27 +23,22 @@ def babelmark():
 def dingus():
     context = {'extensions': extensions, 'extra': extra.extensions}
     # Get data from GET or POST
-    context['src'] = unicode(request.params.get('src', ''), encoding=get_encoding(request.content_type), errors='replace')
+    context['src'] = request.params.get('src', '')
     context['ext'] = request.params.getall('ext')
-    context['safe_mode'] = request.params.get('safe_mode', '')
     context['output_format'] = request.params.get('output_format', '')
     # Build rest of context
     context['version'] = markdown.version
     # Build command
     cmd = 'markdown.markdown(src'
-    for key in ['ext', 'safe_mode', 'output_format']:
-        if context[key]:
-            if isinstance(context[key], basestring):
-                cmd += ", %s='%s'" % (key, context[key])
-            else:
-                cmd += ', %s=%s' % (key, context[key])
+    if context['ext']:
+        cmd += ', extensions={}'.format(context['ext'])
+    if context['output_format']:
+        cmd += ", output_format='{}'".format(context['output_format'])
     context['cmd'] = cmd + ')'
     # Convert
     kwargs = {'extensions': context['ext']}
-    if context['safe_mode']: kwargs['safe_mode'] = context['safe_mode']
     if context['output_format']: kwargs['output_format'] = context['output_format']
     context['result'] = markdown.markdown(context['src'], **kwargs)
-    #context['clean_result'] = bleach.clean(context['result'])
     return template(tmpl, **context)
 
 
@@ -58,6 +46,8 @@ tmpl = """<!doctype html>
 <html>
   <head>
     <title>Python-Markdown: Dingus</title>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/github.min.css">
     <style type="text/css">
     /*
     	Basic layout courtesy of InkNoise's very nifty Layout-o-matic:
@@ -112,6 +102,9 @@ tmpl = """<!doctype html>
 		width: 97%;
 		overflow: auto;
 	}
+    div.codehilite pre code, pre.renderbox code {
+        background: transparent;
+    }
 	.label {
 		margin-bottom: 4px;
 	}
@@ -171,168 +164,9 @@ tmpl = """<!doctype html>
 	}
 
 	</style>
-    <style type="text/css">
-    /*
 
-    XCode style (c) Angel Garcia <angelgarcia.mail@gmail.com>
-
-    */
-
-    pre code {
-      display: block; padding: 0.5em;
-      background: #fff; color: black;
-    }
-
-    pre .comment,
-    pre .template_comment,
-    pre .javadoc,
-    pre .comment * {
-      color: rgb(0,106,0);
-    }
-
-    pre .keyword,
-    pre .literal,
-    pre .nginx .title {
-      color: rgb(170,13,145);
-    }
-    pre .method,
-    pre .list .title,
-    pre .tag .title,
-    pre .setting .value,
-    pre .winutils,
-    pre .tex .command,
-    pre .http .title,
-    pre .request,
-    pre .status {
-      color: #008;
-    }
-
-    pre .envvar,
-    pre .tex .special {
-      color: #660;
-    }
-
-    pre .string {
-      color: rgb(196,26,22);
-    }
-    pre .tag .value,
-    pre .cdata,
-    pre .filter .argument,
-    pre .attr_selector,
-    pre .apache .cbracket,
-    pre .date,
-    pre .regexp {
-      color: #080;
-    }
-
-    pre .sub .identifier,
-    pre .pi,
-    pre .tag,
-    pre .tag .keyword,
-    pre .decorator,
-    pre .ini .title,
-    pre .shebang,
-    pre .input_number,
-    pre .hexcolor,
-    pre .rules .value,
-    pre .css .value .number,
-    pre .symbol,
-    pre .symbol .string,
-    pre .number,
-    pre .css .function,
-    pre .clojure .title,
-    pre .clojure .built_in {
-      color: rgb(28,0,207);
-    }
-
-    pre .class .title,
-    pre .haskell .type,
-    pre .smalltalk .class,
-    pre .javadoctag,
-    pre .yardoctag,
-    pre .phpdoc,
-    pre .typename,
-    pre .tag .attribute,
-    pre .doctype,
-    pre .class .id,
-    pre .built_in,
-    pre .setting,
-    pre .params,
-    pre .clojure .attribute {
-      color: rgb(92,38,153);
-    }
-
-    pre .variable {
-     color: rgb(63,110,116);
-    }
-    pre .css .tag,
-    pre .rules .property,
-    pre .pseudo,
-    pre .subst {
-      color: #000;
-    }
-
-    pre .css .class, pre .css .id {
-      color: #9B703F;
-    }
-
-    pre .value .important {
-      color: #ff7700;
-      font-weight: bold;
-    }
-
-    pre .rules .keyword {
-      color: #C5AF75;
-    }
-
-    pre .annotation,
-    pre .apache .sqbracket,
-    pre .nginx .built_in {
-      color: #9B859D;
-    }
-
-    pre .preprocessor,
-    pre .preprocessor * {
-      color: rgb(100,56,32);
-    }
-
-    pre .tex .formula {
-      background-color: #EEE;
-      font-style: italic;
-    }
-
-    pre .diff .header,
-    pre .chunk {
-      color: #808080;
-      font-weight: bold;
-    }
-
-    pre .diff .change {
-      background-color: #BCCFF9;
-    }
-
-    pre .addition {
-      background-color: #BAEEBA;
-    }
-
-    pre .deletion {
-      background-color: #FFC8BD;
-    }
-
-    pre .comment .yardoctag {
-      font-weight: bold;
-    }
-
-    pre .method .id {
-      color: #000;
-    }
-
-    </style>
-    <style type="text/css">
-    /*
-    Pygments styles
-    */
-
+    <style>
+    .codehilite code { background-color: #ffffcc }
     .codehilite .hll { background-color: #ffffcc }
     .codehilite  { background: #f0f0f0; }
     .codehilite .c { color: #60a0b0; font-style: italic } /* Comment */
@@ -397,7 +231,7 @@ tmpl = """<!doctype html>
     .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
     </style>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
-    <script src="http://achinghead.com/media/highlight.pack.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function(){
         // JS is active, so setup for it.
@@ -623,40 +457,16 @@ Violets are blue.
       </fieldset> <!-- extensions -->
 
       <a href="#" id="toggle_ext" style="display:none">Show Extensions v</a>
-      <label id="safe_mode">Safe_Mode:
-        <select name="safe_mode">
-          <option value="">off (default)</option>
-          <option value="escape"\\\\
-%if safe_mode == "escape":
- selected="selected"\\\\
-%end
->escape</option>
-          <option value="replace"\\\\
-%if safe_mode == "replace":
- selected="selected"\\\\
-%end
->replace</option>
-          <option value="remove"\\\\
-%if safe_mode == "remove":
- selected="selected"\\\\
-%end
->remove</option>
-        </select>
-      </label>
+
 
       <label id="output_format">Output_Format:
         <select name="output_format" value="{{ output_format }}">
           <option value="">xhtml (default)</option>
-          <option value="html4"\\\\
-%if output_format == "html4":
+          <option value="html"\\\\
+%if output_format == "html":
  selected="selected"\\\\
 %end
->html 4</option>
-          <option value="html5"\\\\
-%if output_format == "html5":
- selected="selected"\\\\
-%end
->html 5</option>
+>html</option>
         </select>
       </label>
 
@@ -674,22 +484,21 @@ Violets are blue.
     </div>
 
     <p class="label">Python Code:</p>
-    <pre id="python" class="renderbox"><code class="python">&gt;&gt;&gt;&nbsp;import markdown
-&gt;&gt;&gt;&nbsp;src = '''...'''
-&gt;&gt;&gt;&nbsp;html = {{ cmd }}</code></pre>
+    <pre id="python" class="renderbox"><code class="python">import markdown
+html = {{ cmd }}</code></pre>
 %end
 
 <p class='footer'>
-  <a href="http://packages.python.org/Markdown/">Python-Markdown</a> version {{ version }}<br />
-  Copyright &copy; 2007-2012 Python-Markdown Project (v. 1.7 and later)<br />
+  <a href="https://python-markdown.github.io/">Python-Markdown</a> version {{ version }}<br />
+  Copyright &copy; 2007-2020 Python-Markdown Project (v. 1.7 and later)<br />
   Copyright &copy; 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)<br />
   Copyright &copy; 2004 Manfred Stienstra (the original version)<br />
   <br />
   <a href="http://daringfireball.net/projects/markdown/">Markdown</a> and
   <a href="http://daringfireball.net/projects/markdown/dingus">Dingus</a> Copyright &copy; 2004
   <a href="http://daringfireball.net/colophon/">John Gruber</a><br />
-  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012
-  <a href="http://achinghead.com">Waylan Limberg</a>
+  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012-2020
+  <a href="https://github.com/waylan">Waylan Limberg</a>
 
 </p>
 
