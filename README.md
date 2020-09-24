@@ -36,7 +36,7 @@ python dingus.py
 Then point your browser at <http://localhost:8080/dingus>.
 
 To run a production instance you need to deploy a [bottle] server. For instance, to
-configure a basic wsgi server, first ensure `dingus.py` is on your Python path. Then
+configure a basic `wsgi` server, first ensure `dingus.py` is on your Python path. Then
 create a `wsgi` configuration file as follows:
 
 ```python
@@ -48,7 +48,7 @@ application = bottle.default_app()
 See the documentation for your specific server for instructions on pointing your server
 at the `application` in your `wsgi` configuration file.
 
-[bottle] https://bottlepy.org/docs/dev/deployment.html
+[bottle]: https://bottlepy.org/docs/dev/deployment.html
 
 # Copyright
 
