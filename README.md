@@ -54,7 +54,7 @@ at the `application` in your `wsgi` configuration file.
 
 [Markdown] and [Dingus] Copyright &copy; 2004 [John Gruber]<br />
 Additions and Modifications to Dingus (extension support, etc.)
-Copyright &copy; 2012-2020 [Waylan Limberg]
+Copyright &copy; 2012-2023 [Waylan Limberg]
 
 [Markdown]: http://daringfireball.net/projects/markdown/
 [Dingus]: http://daringfireball.net/projects/markdown/dingus

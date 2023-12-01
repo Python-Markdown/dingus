@@ -5,7 +5,7 @@ import os
 
 
 # Get a list of markdown extensions
-extensions = [ext.name for ext in markdown.util.INSTALLED_EXTENSIONS if ext.name not in extra.extensions + ['extra']]
+extensions = [ext.name for ext in markdown.util.get_installed_extensions() if ext.name not in extra.extensions + ['extra']]
 extensions.sort()
 extra.extensions.sort()
 
@@ -15,7 +15,7 @@ def babelmark():
     src = request.query.get('text', '')
     return {
         'name'   : 'Python-Markdown',
-        'version': markdown.version,
+        'version': markdown.__version__,
         'html'   : markdown.markdown(src)
     }
 
@@ -27,7 +27,7 @@ def dingus():
     context['ext'] = request.params.getall('ext')
     context['output_format'] = request.params.get('output_format', '')
     # Build rest of context
-    context['version'] = markdown.version
+    context['version'] = markdown.__version__
     # Build command
     cmd = 'markdown.markdown(src'
     if context['ext']:
@@ -497,7 +497,7 @@ html = {{ cmd }}</code></pre>
   <a href="http://daringfireball.net/projects/markdown/">Markdown</a> and
   <a href="http://daringfireball.net/projects/markdown/dingus">Dingus</a> Copyright &copy; 2004
   <a href="http://daringfireball.net/colophon/">John Gruber</a><br />
-  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012-2020
+  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012-2023
   <a href="https://github.com/waylan">Waylan Limberg</a>
 
 </p>
