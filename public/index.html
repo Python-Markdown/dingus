@@ -1,169 +1,126 @@
-from bottle import route, run, request, template
-import markdown
-from markdown.extensions import extra
-import os
-
-
-# Get a list of markdown extensions
-extensions = [ext.name for ext in markdown.util.get_installed_extensions() if ext.name not in extra.extensions + ['extra']]
-extensions.sort()
-extra.extensions.sort()
-
-@route('/babelmark')
-def babelmark():
-    """ Provide a hook for http://johnmacfarlane.net/babelmark2/ to use. """
-    src = request.query.get('text', '')
-    return {
-        'name'   : 'Python-Markdown',
-        'version': markdown.__version__,
-        'html'   : markdown.markdown(src)
-    }
-
-@route('/dingus', method=('GET', 'POST'))
-def dingus():
-    context = {'extensions': extensions, 'extra': extra.extensions}
-    # Get data from GET or POST
-    context['src'] = request.params.get('src', '')
-    context['ext'] = request.params.getall('ext')
-    context['output_format'] = request.params.get('output_format', '')
-    # Build rest of context
-    context['version'] = markdown.__version__
-    # Build command
-    cmd = 'markdown.markdown(src'
-    if context['ext']:
-        cmd += ', extensions={}'.format(context['ext'])
-    if context['output_format']:
-        cmd += ", output_format='{}'".format(context['output_format'])
-    context['cmd'] = cmd + ')'
-    # Convert
-    kwargs = {'extensions': context['ext']}
-    if context['output_format']: kwargs['output_format'] = context['output_format']
-    context['result'] = markdown.markdown(context['src'], **kwargs)
-    return template(tmpl, **context)
-
-
-tmpl = """<!doctype html>
+<!doctype html>
 <html>
   <head>
     <title>Python-Markdown: Dingus</title>
     <meta charset="UTF-8"/>
+    <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/github.min.css">
     <style type="text/css">
     /*
-    	Basic layout courtesy of InkNoise's very nifty Layout-o-matic:
-		http://www.inknoise.com/experimental/layoutomatic.php
-	*/
+        Basic layout courtesy of InkNoise's very nifty Layout-o-matic:
+        http://www.inknoise.com/experimental/layoutomatic.php
+    */
 
-	#sidebar h1 {
-		font-size: 1.5em;
-		font-weight: bold;
-	}
-	#sidebar h2 {
-		font-size: 1.2em;
-		font-weight: bold;
-		margin-bottom: -.5em;
-	}
-	#sidebar h3 {
-		font-size: 1em;
-		font-weight: bold;
-		text-transform: none;
-		margin-bottom: .25em;
-		margin-top: 1.5em;
-	}
-	#sidebar code {
-		font-family: Monaco, ProFont, "Andale Mono", "Lucida Console", Courier, monospace;
-		font-size: 10px;
-	}
-	#sidebar pre {
-		line-height: 12px;
-		margin-top: 0;
-		background-color: #f5f5f5;
-		border: 1px solid #ccc;
-		padding: 4px;
-	}
-	#sidebar p {
-		margin-top: 0;
-		margin-bottom: 0;
-	}
+    #sidebar h1 {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    #sidebar h2 {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: -.5em;
+    }
+    #sidebar h3 {
+        font-size: 1em;
+        font-weight: bold;
+        text-transform: none;
+        margin-bottom: .25em;
+        margin-top: 1.5em;
+    }
+    #sidebar code {
+        font-family: Monaco, ProFont, "Andale Mono", "Lucida Console", Courier, monospace;
+        font-size: 10px;
+    }
+    #sidebar pre {
+        line-height: 12px;
+        margin-top: 0;
+        background-color: #f5f5f5;
+        border: 1px solid #ccc;
+        padding: 4px;
+    }
+    #sidebar p {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
 
-	body {
-		background-color: #eee;
-		font-family: "Lucida Grande", Verdana, sans-serif;
-		font-size: 11px;
-		line-height: 1.6em;
-	}
-	.renderbox {
-		background: white;
-		font-family: Georgia, serif;
-		font-size: 13px;
-		border: 1px #888 solid;
-		padding: 0 5px;
-		margin: 0;
-		width: 97%;
-		overflow: auto;
-	}
+    body {
+        background-color: #eee;
+        font-family: "Lucida Grande", Verdana, sans-serif;
+        font-size: 11px;
+        line-height: 1.6em;
+    }
+    .renderbox {
+        background: white;
+        font-family: Georgia, serif;
+        font-size: 13px;
+        border: 1px #888 solid;
+        padding: 0 5px;
+        margin: 0;
+        width: 97%;
+        overflow: auto;
+    }
     div.codehilite pre code, pre.renderbox code {
         background: transparent;
     }
-	.label {
-		margin-bottom: 4px;
-	}
+    .label {
+        margin-bottom: 4px;
+    }
 
-	#container {
-		border: 0px solid gray;
-		margin: 10px;
-		margin-left: auto;
-		margin-right: auto;
-		padding: 0px;
-		min-width: 750px;
+    #container {
+        border: 0px solid gray;
+        margin: 10px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0px;
+        min-width: 750px;
 
-		/* For Win/IE: */
-		width:expression("800px" );
-		margin-left:expression("0");
-	}
+        /* For Win/IE: */
+        width:expression("800px" );
+        margin-left:expression("0");
+    }
 
-	#banner {
-		padding: 0;
-		margin-bottom: 5px;
-		background-color: transparent;
-	}
+    #banner {
+        padding: 0;
+        margin-bottom: 5px;
+        background-color: transparent;
+    }
 
-	#app {
-		padding: 0 10px 0 10px;
-		margin-right: 270px;
-		background-color: transparent;
-		border-right: 0px solid #bbb;
-	}
+    #app {
+        padding: 0 10px 0 10px;
+        margin-right: 270px;
+        background-color: transparent;
+        border-right: 0px solid #bbb;
+    }
 
-	#sidebar {
-		float: right;
-		width: 250px;
-		margin: 0;
-		margin-right: 10px;
-		padding: 0;
-		background-color: transparent;
-	}
+    #sidebar {
+        float: right;
+        width: 250px;
+        margin: 0;
+        margin-right: 10px;
+        padding: 0;
+        background-color: transparent;
+    }
 
-	.footer {
-		margin-top: 100px;
-	}
+    .footer {
+        margin-top: 100px;
+    }
 
-	#buttonrow {
-		margin-top: 10px;
-		margin-bottom: 60px;
-	}
-	#convert {
-		width: 7em;
-		margin-left:20px;
-	}
+    #buttonrow {
+        margin-top: 10px;
+        margin-bottom: 60px;
+    }
+    #convert {
+        width: 7em;
+        margin-left:20px;
+    }
 
-	textarea[name="src"] {
-	/* WinIE is retarded. Thanks to Sam Ruby for the workaround:
-		http://www.intertwingly.net/blog/1432.html */
-		width: 98%;
-	}
+    textarea[name="src"] {
+    /* WinIE is retarded. Thanks to Sam Ruby for the workaround:
+        http://www.intertwingly.net/blog/1432.html */
+        width: 98%;
+    }
 
-	</style>
+    </style>
 
     <style>
     .codehilite code { background-color: #ffffcc }
@@ -230,47 +187,8 @@ tmpl = """<!doctype html>
     .codehilite .vi { color: #bb60d5 } /* Name.Variable.Instance */
     .codehilite .il { color: #40a070 } /* Literal.Number.Integer.Long */
     </style>
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
-    <script type="text/javascript">
-      $(document).ready(function(){
-        // JS is active, so setup for it.
-        $("#extensions").hide();
-        var showExt = true;
-        $("#toggle_ext").show();
-        if ($("#extra input").is(":checked")) {
-          $("#extra-exts").find(':input:not(:disabled)').prop('disabled',true);
-        };
-
-        // Highlight "HTML Source" and "Python Code" - but not "HTML Preview" or cheatsheet blocks.
-        // If codehilite is used, that highlight codeblocks in the preview seperately.
-        $("pre.renderbox code").each(function(i, e) {hljs.highlightBlock(e)});
-
-        // Bind toggle click
-        $("#toggle_ext").click(function(event){
-          if (showExt == true) {
-            $("#extensions").slideDown("fast");
-            $(event.target).text("Hide Extensions ^");
-            showExt = false;
-          } else if (showExt == false) {
-            $("#extensions").slideUp("fast");
-            $(event.target).text("Show Extensions v");
-            showExt = true;
-          };
-          event.preventDefault();
-        });
-
-        // Bind Extra input change
-        $("#extra input").change(function(event){
-          if (event.target.checked == true) {
-            $("#extra-exts").find(':input:not(:disabled)').prop('disabled',true);
-          } else if (event.target.checked == false) {
-            $("#extra-exts").find(':input:disabled').prop('disabled',false);
-          };
-        });
-
-      });
-    </script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v314.0.5/full/pyodide.js"></script>
   </head>
   <body>
 
@@ -420,53 +338,39 @@ Violets are blue.
 
 <div id="app">
 
-    <form action="/dingus" method="post">
+    <form id="mdForm">
       <div id="src">
         <p class="label">Markdown Source:</p>
-        <textarea name="src"  rows="25" cols="80">{{ src }}</textarea>
+        <textarea name="src" rows="25" cols="80"></textarea>
       </div> <!-- src -->
 
       <div id="buttonrow">
 
       <fieldset id="extensions">
         <legend>Extensions</legend>
-%for x in extensions:
-        <label id="{{ x }}"><input type="checkbox" name="ext" value="{{ x }}"\\\\
-%if x in ext:
- checked\\\\
-%end
- /><code>{{ x }}</code></label>
-%end
-        <fieldset>
-        <legend><label id="extra"><input type="checkbox" name="ext" value="extra"\\\\
-%if "extra" in ext:
- checked\\\\
-%end
- /><code>extra</code></label></legend>
-
-      <div id="extra-exts">
-%for x in extra:
-        <label id="{{ x }}"><input type="checkbox" name="ext" value="{{ x }}"\\\\
-%if x in ext:
- checked\\\\
-%end
- /><code>{{ x }}</code></label>
-%end
-      </div> <!-- extra-exts -->
-      </fieldset>
+        <label id="abbr"><input type="checkbox" name="ext" value="abbr" /><code>abbr</code></label>
+        <label id="admonition"><input type="checkbox" name="ext" value="admonition" /><code>admonition</code></label>
+        <label id="attr_list"><input type="checkbox" name="ext" value="attr_list" /><code>attr_list</code></label>
+        <label id="codehilite"><input type="checkbox" name="ext" value="codehilite" /><code>codehilite</code></label>
+        <label id="def_list"><input type="checkbox" name="ext" value="def_list" /><code>def_list</code></label>
+        <label id="fenced_code"><input type="checkbox" name="ext" value="fenced_code" /><code>fenced_code</code></label>
+        <label id="footnotes"><input type="checkbox" name="ext" value="footnotes" /><code>footnotes</code></label>
+        <label id="legacy_attrs"><input type="checkbox" name="ext" value="legacy_attrs" /><code>legacy_attrs</code></label>
+        <label id="legacy_em"><input type="checkbox" name="ext" value="legacy_em" /><code>legacy_em</code></label>
+        <label id="md_in_html"><input type="checkbox" name="ext" value="md_in_html" /><code>md_in_html</code></label>
+        <label id="meta"><input type="checkbox" name="ext" value="meta" /><code>meta</code></label>
+        <label id="nl2br"><input type="checkbox" name="ext" value="nl2br" /><code>nl2br</code></label>
+        <label id="sane_lists"><input type="checkbox" name="ext" value="sane_lists" /><code>sane_lists</code></label>
+        <label id="smarty"><input type="checkbox" name="ext" value="smarty" /><code>smarty</code></label>
+        <label id="tables"><input type="checkbox" name="ext" value="tables" /><code>tables</code></label>
+        <label id="toc"><input type="checkbox" name="ext" value="toc" /><code>toc</code></label>
+        <label id="wikilinks"><input type="checkbox" name="ext" value="wikilinks" /><code>wikilinks</code></label>
       </fieldset> <!-- extensions -->
 
-      <a href="#" id="toggle_ext" style="display:none">Show Extensions v</a>
-
-
       <label id="output_format">Output_Format:
-        <select name="output_format" value="{{ output_format }}">
-          <option value="">xhtml (default)</option>
-          <option value="html"\\\\
-%if output_format == "html":
- selected="selected"\\\\
-%end
->html</option>
+        <select name="output_format" value="">
+          <option value="xhtml">xhtml (default)</option>
+          <option value="html">html</option>
         </select>
       </label>
 
@@ -474,41 +378,77 @@ Violets are blue.
       </div> <!--buttonrow-->
 
     </form>
-%if result:
+
     <p class="label">HTML Source:</p>
-    <pre id="rawoutput" class="renderbox"><code class="html">{{ result }}</code></pre>
+    <pre id="rawoutput" class="renderbox"><code class="html"></code></pre>
 
     <p class="label">HTML Preview:</p>
     <div id="output" class="renderbox">
-      {{! result }}
     </div>
 
-    <p class="label">Python Code:</p>
-    <pre id="python" class="renderbox"><code class="python">import markdown
-html = {{ cmd }}</code></pre>
-%end
-
 <p class='footer'>
-  <a href="https://python-markdown.github.io/">Python-Markdown</a> version {{ version }}<br />
-  Copyright &copy; 2007-2020 Python-Markdown Project (v. 1.7 and later)<br />
+  <a href="https://python-markdown.github.io/">Python-Markdown</a> version <span id="version">{{ version }}</span><br />
+  Copyright &copy; 2007-2026 Python-Markdown Project (v. 1.7 and later)<br />
   Copyright &copy; 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)<br />
   Copyright &copy; 2004 Manfred Stienstra (the original version)<br />
   <br />
   <a href="http://daringfireball.net/projects/markdown/">Markdown</a> and
   <a href="http://daringfireball.net/projects/markdown/dingus">Dingus</a> Copyright &copy; 2004
   <a href="http://daringfireball.net/colophon/">John Gruber</a><br />
-  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012-2023
+  Additions and Modifications to Dingus (extension support, etc.) Copyright &copy; 2012-2026
   <a href="https://github.com/waylan">Waylan Limberg</a>
-
 </p>
 
 </div> <!-- app -->
 </div> <!-- container -->
 
+<script type="text/javascript">
+    const src_el = document.getElementById("src").lastElementChild;
+    const form_el = document.getElementById("mdForm")
+    const rawoutput_el = document.getElementById("rawoutput").firstElementChild;
+    const output_el = document.getElementById("output");
+    const version_el = document.getElementById("version");
+
+    // init Pyodide
+    async function main() {
+        let pyodide = await loadPyodide();
+        await pyodide.loadPackage("micropip");
+        const micropip = pyodide.pyimport("micropip");
+        await micropip.install("markdown");
+        await micropip.install("pygments");
+        let output = pyodide.runPython(`
+            import markdown
+            markdown.__version__
+        `);
+        version_el.textContent = output;
+        return pyodide;
+    }
+    let pyodideReadyPromise = main();
+
+    async function convertMarkdown(args, kwargs) {
+        let pyodide = await pyodideReadyPromise;
+        let locals = pyodide.toPy({args: args, kwargs: kwargs})
+        let output = pyodide.runPython(`
+            import markdown
+            markdown.markdown(*args, **kwargs)
+        `,
+        { locals });
+        rawoutput_el.textContent = output;
+        output_el.setHTMLUnsafe(output);
+        hljs.highlightBlock(rawoutput_el);
+    }
+
+    form_el.addEventListener("submit", function (e) {
+        e.preventDefault()
+
+        var args = [src_el.value];
+        var kwargs = {
+            extensions : Array.from(form_el.querySelectorAll('input[name=ext]:checked')).map(x => x.value),
+            output_format : form_el.querySelector('select[name=output_format]').value
+        }
+        convertMarkdown(args, kwargs);
+    });
+</script>
+
   </body>
 </html>
-"""
-
-
-if __name__ == '__main__':
-    run(host='localhost', port=8080, reloader=True)
