@@ -1,7 +1,7 @@
 # Python-Markdown Dingus
 
 A simple site for testing Python-Markdown implemented as a [Cloudflare worker].
-Visit <https://waylan.pythonanywhere.com/dingus> for a live demo.
+Visit <https://dingus.python-markdown.workers.dev> for a live demo.
 
 A backend which conforms to [Babelmark3]'s [API] is also provided at the URL:
 `/bablemark`.
