@@ -7,7 +7,7 @@ A backend which conforms to [Babelmark3]'s [API] is also provided at the URL:
 `/bablemark`.
 
 [Cloudflare worker]: https://developers.cloudflare.com/workers/languages/python/
-[Babelmark2]: https://babelmark.github.io/
+[Babelmark3]: https://babelmark.github.io/
 [API]: https://github.com/babelmark/babelmark-registry
 
 ## Running the Cloudflare development server
