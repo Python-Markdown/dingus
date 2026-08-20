@@ -1,60 +1,54 @@
 # Python-Markdown Dingus
 
-A simple site for testing Python-Markdown.
-Visit <https://waylan.pythonanywhere.com/dingus> for a live demo.
+A simple site for testing Python-Markdown implemented as a [Cloudflare worker].
+Visit <https://dingus.python-markdown.workers.dev> for a live demo.
 
- A backend which conforms to [Babelmark2]'s [API] is also provided at the URL: `/bablemark`.
+A backend which conforms to [Babelmark3]'s [API] is also provided at the URL:
+`/bablemark`.
 
-[Babelmark2]: http://johnmacfarlane.net/babelmark2/
-[API]: https://johnmacfarlane.net/babelmark2/faq.html#how-can-i-add-my-markdown-implementation-to-babelmark-2
+[Cloudflare worker]: https://developers.cloudflare.com/workers/languages/python/
+[Babelmark2]: https://babelmark.github.io/
+[API]: https://github.com/babelmark/babelmark-registry
 
-# Setup
+## Running the Cloudflare development server
 
-To set up a dev environment, clone this repo and create a virtual environment. Then
-install the dependencies.
-
-```bash
-python -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
-```
-
-After a new release of Python-Markdown has been made, update with:
+To run a local instance of the server for development and testing, clone this
+repo and run:
 
 ```bash
-pip install -U markdown
+uv run pywrangler dev
 ```
 
-# Running the server
+Then point your browser at <http://127.0.0.1:8787/>.
 
-To run a local instance of the server for development and testing:
+For the Babelmark API, use <http://127.0.0.1:8787/babelmark?text=hi>.
+
+## Running a simple development server
+
+If you don't need the Babelmark backend and only want to use the webpage
+frontend, you can run a simple server without any need for Cloudflare. The
+webpage is a single page app which uses [Pyodide] to import and run
+Python-Markdown within the browser locally.
+
+You can run a simple static file server from the `public/` directory.
 
 ```bash
-python dingus.py
+cd public/
+python -m http.server
 ```
 
-Then point your browser at <http://localhost:8080/dingus>.
+Then point your browser at <http://127.0.0.1:8000/>.
 
-To run a production instance you need to deploy a [bottle] server. For instance, to
-configure a basic `wsgi` server, first ensure `dingus.py` is on your Python path. Then
-create a `wsgi` configuration file as follows:
+Any other static file server should work as well. There is no need for or
+dependency on a local Python installation.
 
-```python
-import bottle
-import dingus
-application = bottle.default_app()
-```
+[Pyodide]: https://pyodide.org/en/stable/
 
-See the documentation for your specific server for instructions on pointing your server
-at the `application` in your `wsgi` configuration file.
-
-[bottle]: https://bottlepy.org/docs/dev/deployment.html
-
-# Copyright
+## Copyright
 
 [Markdown] and [Dingus] Copyright &copy; 2004 [John Gruber]<br />
 Additions and Modifications to Dingus (extension support, etc.)
-Copyright &copy; 2012-2023 [Waylan Limberg]
+Copyright &copy; 2012-2026 [Waylan Limberg]
 
 [Markdown]: http://daringfireball.net/projects/markdown/
 [Dingus]: http://daringfireball.net/projects/markdown/dingus

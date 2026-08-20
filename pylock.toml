@@ -1,0 +1,13 @@
+lock-version = "1.0"
+created-by = "uv"
+requires-python = ">=3.13.2"
+
+[[packages]]
+name = "markdown"
+version = "3.10.3"
+wheels = [{ url = "https://files.pythonhosted.org/packages/64/69/4a5af2bc115a9a33fefe51709749de8262be3f9ba063d1753a837cdbc49c/markdown-3.10.3-py3-none-any.whl", upload-time = 2026-07-30T19:05:27Z, size = 110757, hashes = { sha256 = "fa6c92a00a4a3c98b22728c64a935ae1928250ae65058a6ded814d2cc29a4cea" } }]
+
+[[packages]]
+name = "workers-runtime-sdk"
+version = "1.6.13"
+wheels = [{ url = "https://files.pythonhosted.org/packages/49/bc/2f676f7f4b0ffadc3737098f12ae3ad02b47003b17d2bc3657c9e8c526bc/workers_runtime_sdk-1.6.13-py3-none-any.whl", upload-time = 2026-08-12T03:35:57Z, size = 34448, hashes = { sha256 = "bc76862651bea761ed14bce80afce104e2d8e73cae8b1069e76c789c38a8308d" } }]
