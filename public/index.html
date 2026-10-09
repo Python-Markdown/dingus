@@ -387,7 +387,7 @@ Violets are blue.
     </div>
 
 <p class='footer'>
-  <a href="https://python-markdown.github.io/">Python-Markdown</a> version <span id="version">{{ version }}</span><br />
+  <a href="https://python-markdown.github.io/">Python-Markdown</a> <span id="version"></span><br />
   Copyright &copy; 2007-2026 Python-Markdown Project (v. 1.7 and later)<br />
   Copyright &copy; 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)<br />
   Copyright &copy; 2004 Manfred Stienstra (the original version)<br />
@@ -410,7 +410,9 @@ Violets are blue.
     const version_el = document.getElementById("version");
 
     // init Pyodide
-    async function main() {
+    async function initPyodide() {
+        rawoutput_el.textContent = 'Initializing...';
+        output_el.setHTMLUnsafe('Initializing...');
         let pyodide = await loadPyodide();
         await pyodide.loadPackage("micropip");
         const micropip = pyodide.pyimport("micropip");
@@ -420,12 +422,22 @@ Violets are blue.
             import markdown
             markdown.__version__
         `);
-        version_el.textContent = output;
+        version_el.textContent = 'version ' + output;
+        rawoutput_el.textContent = 'Ready...';
+        output_el.setHTMLUnsafe('Ready...');
         return pyodide;
-    }
-    let pyodideReadyPromise = main();
+    };
+
+    let pyodideReadyPromise
+
+    function ensurePyodide(){
+        if (!pyodideReadyPromise) {
+            pyodideReadyPromise = initPyodide();
+        }
+    };
 
     async function convertMarkdown(args, kwargs) {
+        ensurePyodide();
         let pyodide = await pyodideReadyPromise;
         let locals = pyodide.toPy({args: args, kwargs: kwargs})
         let output = pyodide.runPython(`
@@ -436,7 +448,7 @@ Violets are blue.
         rawoutput_el.textContent = output;
         output_el.setHTMLUnsafe(output);
         hljs.highlightBlock(rawoutput_el);
-    }
+    };
 
     form_el.addEventListener("submit", function (e) {
         e.preventDefault()
